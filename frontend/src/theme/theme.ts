@@ -1,0 +1,87 @@
+import { createTheme } from '@mui/material/styles';
+
+// Cores da marca EBSERH (baseado na logo: cinza escuro e verde)
+const ebserhColors = {
+  primary: {
+    main: '#00A859', // Verde EBSERH
+    light: '#4DBF7F',
+    dark: '#007A3F',
+    contrastText: '#ffffff',
+  },
+  secondary: {
+    main: '#4A4A4A', // Cinza escuro EBSERH
+    light: '#6B6B6B',
+    dark: '#2A2A2A',
+    contrastText: '#ffffff',
+  },
+  background: {
+    default: '#F5F5F5',
+    paper: '#FFFFFF',
+  },
+  text: {
+    primary: '#212121',
+    secondary: '#757575',
+  },
+};
+
+export const theme = createTheme({
+  palette: {
+    ...ebserhColors,
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontSize: '2.5rem',
+      fontWeight: 600,
+    },
+    h2: {
+      fontSize: '2rem',
+      fontWeight: 600,
+    },
+    h3: {
+      fontSize: '1.75rem',
+      fontWeight: 600,
+    },
+    h4: {
+      fontSize: '1.5rem',
+      fontWeight: 600,
+    },
+    h5: {
+      fontSize: '1.25rem',
+      fontWeight: 600,
+    },
+    h6: {
+      fontSize: '1rem',
+      fontWeight: 600,
+    },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+          borderRadius: 8,
+          padding: '10px 24px',
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 8,
+          },
+        },
+      },
+    },
+  },
+});
+
