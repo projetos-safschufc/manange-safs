@@ -54,7 +54,7 @@ const AtribuirResponsabilidade = () => {
     master: '',
     descricao_mat: '',
     serv_aquisicao: '',
-    gr: '',
+    resp_controle: '',
   });
 
   // Estados para dados da tabela
@@ -71,7 +71,6 @@ const AtribuirResponsabilidade = () => {
 
   // Estados para opções de filtros
   const [servicosAquisicao, setServicosAquisicao] = useState<string[]>([]);
-  const [gruposCatalogo, setGruposCatalogo] = useState<string[]>([]);
   const [loadingFilters, setLoadingFilters] = useState(false);
 
   // Debounce para filtros de texto
@@ -95,16 +94,6 @@ const AtribuirResponsabilidade = () => {
           }
         } catch (error) {
           console.error('Erro ao carregar serviços de aquisição:', error);
-        }
-
-        // Carrega grupos do catálogo
-        try {
-          const gruposResponse = await api.get('/catalogo/grupos-catalogo');
-          if (Array.isArray(gruposResponse.data)) {
-            setGruposCatalogo(gruposResponse.data);
-          }
-        } catch (error) {
-          console.error('Erro ao carregar grupos:', error);
         }
       } catch (error) {
         console.error('Erro ao carregar opções de filtro:', error);
@@ -135,8 +124,8 @@ const AtribuirResponsabilidade = () => {
       if (currentFilters.serv_aquisicao) {
         params.serv_aquisicao = currentFilters.serv_aquisicao;
       }
-      if (currentFilters.gr) {
-        params.gr = currentFilters.gr;
+      if (currentFilters.resp_controle) {
+        params.resp_controle = currentFilters.resp_controle;
       }
 
       const response = await api.get('/catalogo', { params });
@@ -189,7 +178,7 @@ const AtribuirResponsabilidade = () => {
   useEffect(() => {
     setPage(1);
     fetchData(1, filters);
-  }, [filters.serv_aquisicao, filters.gr]);
+  }, [filters.serv_aquisicao, filters.resp_controle]);
 
   // Manipula mudança de filtros
   const handleFilterChange = (field: keyof typeof filters, value: string) => {
@@ -202,7 +191,7 @@ const AtribuirResponsabilidade = () => {
       master: '',
       descricao_mat: '',
       serv_aquisicao: '',
-      gr: '',
+      resp_controle: '',
     });
     setPage(1);
     setSelectedIds(new Set());
@@ -255,6 +244,34 @@ const AtribuirResponsabilidade = () => {
       newValues[id] = funcionario.nome_func;
     });
     setRespControleValues(newValues);
+  };
+
+  // Seleciona / desseleciona todos os itens da página atual (respeitando os filtros)
+  const areAllCurrentPageSelected =
+    items.length > 0 && items.every((item) => selectedIds.has(item.id));
+
+  const handleToggleSelectAllCurrentPage = (checked: boolean) => {
+    const newSelectedIds = new Set(selectedIds);
+    const newRespValues: Record<number, string> = { ...respControleValues };
+
+    if (checked) {
+      items.forEach((item) => {
+        newSelectedIds.add(item.id);
+        if (newRespValues[item.id] === undefined) {
+          newRespValues[item.id] = '';
+        }
+      });
+    } else {
+      items.forEach((item) => {
+        newSelectedIds.delete(item.id);
+        if (newRespValues[item.id] !== undefined) {
+          delete newRespValues[item.id];
+        }
+      });
+    }
+
+    setSelectedIds(newSelectedIds);
+    setRespControleValues(newRespValues);
   };
 
   // Manipula mudança de página
@@ -347,7 +364,9 @@ const AtribuirResponsabilidade = () => {
     fetchData(page, filters);
   };
 
-  const funcionariosAtivos = funcionarios.filter(f => f.status === 'ativo');
+  const funcionariosAtivos = funcionarios.filter(
+    (f) => f.status === 'ativo' && (f.setor_func === 'UACE' || f.setor_func === 'ULOG')
+  );
 
   return (
     <Container maxWidth={false} sx={{ width: '90%', maxWidth: '100%', px: 0, margin: 0 }}>
@@ -414,19 +433,19 @@ const AtribuirResponsabilidade = () => {
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <FormControl fullWidth>
-                <InputLabel>GR</InputLabel>
+                <InputLabel>Resp. Ctrl</InputLabel>
                 <Select
-                  value={filters.gr}
-                  onChange={(e) => handleFilterChange('gr', e.target.value)}
-                  label="GR"
+                  value={filters.resp_controle}
+                  onChange={(e) => handleFilterChange('resp_controle', e.target.value)}
+                  label="Resp. Ctrl"
                   disabled={loadingFilters}
                 >
                   <MenuItem value="">
                     <em>Todos</em>
                   </MenuItem>
-                  {gruposCatalogo.map((grupo) => (
-                    <MenuItem key={grupo} value={grupo}>
-                      {grupo}
+                  {funcionariosAtivos.map((funcionario) => (
+                    <MenuItem key={funcionario.id_func} value={funcionario.nome_func}>
+                      {funcionario.nome_func}
                     </MenuItem>
                   ))}
                 </Select>
@@ -459,11 +478,18 @@ const AtribuirResponsabilidade = () => {
       {/* Tabela de Materiais */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <TableContainer component={Paper} sx={{ maxHeight: 600, overflow: 'auto' }}>
+          <TableContainer component={Paper} sx={{ maxHeight: 1000, overflow: 'auto' }}>
             <Table stickyHeader size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell padding="checkbox" style={{ width: 50 }}>Selecionar</TableCell>
+                  <TableCell padding="checkbox" style={{ width: 50 }}>
+                    <Checkbox
+                      indeterminate={selectedIds.size > 0 && !areAllCurrentPageSelected}
+                      checked={areAllCurrentPageSelected}
+                      onChange={(e) => handleToggleSelectAllCurrentPage(e.target.checked)}
+                      inputProps={{ 'aria-label': 'Selecionar todos os materiais da página atual' }}
+                    />
+                  </TableCell>
                   <TableCell style={{ minWidth: 100 }}>Master</TableCell>
                   <TableCell style={{ minWidth: 300 }}>Descrição</TableCell>
                   <TableCell style={{ minWidth: 80 }}>Apres</TableCell>
